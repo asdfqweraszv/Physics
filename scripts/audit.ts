@@ -46,7 +46,14 @@ for(const topic of topics) {
       inline('$'+variable.symbol+'$');
     }
     assert(detail.example.steps.length>=2&&detail.example.check,'Worked example steps and check');
-    for(const text of [detail.example.prompt,...detail.example.steps,detail.example.check]) inline(text);
+    for(const example of [detail.example,...(detail.additionalExamples||[])]) {
+      for(const text of [example.prompt,...example.steps,example.check]) inline(text);
+    }
+    for(const stage of detail.stages||[]) {
+      katex.renderToString(stage.formula,{throwOnError:true});
+      count++;
+      inline(stage.explanation);
+    }
   }
 }
 assert(Object.keys(formulaDetails).length===38,'38 enriched formula groups');

@@ -17,7 +17,10 @@ await page.screenshot({path:'/tmp/physics-notes-desktop.png'});
 await page.locator('.formula-guide').first().scrollIntoViewIfNeeded();await page.screenshot({path:'/tmp/physics-formula-example.png'});
 const topics=['kinematics','forces','energy','momentum','rotation','heat','gases','phases','electricity'];let count=0;
 for(const topic of topics){await page.goto(`${baseURL}#/notes/${topic}`);await page.locator('.reading').waitFor();await page.waitForFunction(id=>location.hash.endsWith(id)&&document.querySelectorAll('.formula-example').length>0,topic);count+=await page.locator('.formula-example').count();assert(await page.locator('.katex-error').count()===0,'No broken math in '+topic)}
-assert(count===38,'All 38 examples render');
+assert(count===39,'All 39 examples render');
+await page.goto(`${baseURL}#/notes/energy`);await page.locator('.thermal-stage').first().waitFor();
+assert(await page.locator('.thermal-stage').count()===4,'Four explicit frictional-heating stages in notes');
+assert(await page.locator('#formula-frictional-melting .formula-example').count()===2,'No-melt and partial-melt examples');
 await page.goto(baseURL+'#/practice');
 await page.getByRole('link',{name:'Start all 108 questions'}).waitFor();
 assert(await page.locator('.practice-card').count()===9,'9 topic sets');
@@ -35,7 +38,7 @@ const scratch=page.getByRole('textbox',{name:'Scratch working (not saved)'});awa
 await page.getByRole('button',{name:'Show worked solution'}).click();await page.getByRole('button',{name:'I got it right'}).click();
 await page.getByRole('button',{name:'Question 12',exact:true}).click();await page.getByRole('button',{name:'Show worked solution'}).click();await page.getByRole('button',{name:'Needs review',exact:true}).click();
 await page.goto(baseURL+'#/session/missed');await page.locator('.question').waitFor();assert((await page.locator('.question').innerText()).includes('circular track'),'New missed q12 available for retry');
-await page.goto(baseURL+'#/formulas');await page.locator('.variable-table').first().waitFor();assert(await page.locator('.variable-table').count()===38,'Formula sheet covers all symbol tables');
+await page.goto(baseURL+'#/formulas');await page.locator('.variable-table').first().waitFor();assert(await page.locator('.variable-table').count()===38,'Formula sheet covers all symbol tables');assert(await page.locator('.thermal-stage').count()===4,'Four stages also on printable formula sheet');
 await page.emulateMedia({media:'print'});await page.pdf({path:'/tmp/physics-formulas.pdf',format:'A4'});await page.emulateMedia({media:'screen'});
 await page.setViewportSize({width:390,height:844});
 await page.goto(baseURL+'#/notes/kinematics');await page.locator('.formula-example').first().waitFor();
@@ -45,5 +48,5 @@ await page.goto(baseURL+'#/practice');await page.getByRole('link',{name:'Start a
 assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Practice mobile no overflow');
 await page.goto(baseURL+'#/session');await page.locator('.question').waitFor();assert(await page.locator('.question-palette button').count()===108,'Bare session defaults to all questions');
 assert(!errors.length,'No runtime errors: '+errors.join(';'));
-console.log('PASS browser smoke: 38 examples, 108 questions, 6 styles, legacy grades, new grades and missed retry, formula print rendering, 390px mobile overflow checks.');
+console.log('PASS browser smoke: 39 examples, 108 questions, 6 styles, legacy grades, new grades and missed retry, formula print rendering, 390px mobile overflow checks.');
 await browser.close();

@@ -1,4 +1,5 @@
-export interface FormulaDetail { meaning:string; variables:{symbol:string;meaning:string;unit:string}[]; when:string; example:{prompt:string;steps:string[];check:string} }
+export interface WorkedExample {prompt:string;steps:string[];check:string}
+export interface FormulaDetail { meaning:string; variables:{symbol:string;meaning:string;unit:string}[]; when:string; stages?:{title:string;formula:string;explanation:string}[]; example:WorkedExample; additionalExamples?:WorkedExample[] }
 export const formulaDetails: Record<string, FormulaDetail> = {
   "Average velocity and acceleration": {
     "meaning": "Average velocity measures signed position change per second. Average acceleration measures signed velocity change per second; neither tells you every instantaneous value.",
@@ -516,16 +517,21 @@ export const formulaDetails: Record<string, FormulaDetail> = {
     }
   },
   "Frictional melting": {
-    "meaning": "Divide kinetic energy lost by the energy needed to warm and melt each kilogram of ice. The total moving block mass and melted mass are different quantities.",
+    "meaning": "Use a staged heat budget, not a single melting-mass shortcut. First find the mechanical energy converted to heat in the ice. Under a uniform-temperature (lumped) model, the entire block must reach the melting point before any equilibrium melting occurs. Only surplus energy can melt ice.",
     "variables": [
       {
-        "symbol": "m_{\\mathrm{melt}}",
-        "meaning": "Mass of ice warmed and melted",
-        "unit": "kg"
+        "symbol": "Q_{\\mathrm{avail}}",
+        "meaning": "Heat actually retained by the ice",
+        "unit": "J"
+      },
+      {
+        "symbol": "\\eta",
+        "meaning": "Fraction of lost kinetic energy retained by the ice (0 to 1)",
+        "unit": "Dimensionless"
       },
       {
         "symbol": "M",
-        "meaning": "Total moving block mass",
+        "meaning": "Total block mass that is warmed; assumed unchanged",
         "unit": "kg"
       },
       {
@@ -534,31 +540,82 @@ export const formulaDetails: Record<string, FormulaDetail> = {
         "unit": "m/s"
       },
       {
-        "symbol": "c_{\\mathrm{ice}}",
-        "meaning": "Ice specific heat capacity",
+        "symbol": "Q_{\\mathrm{warm}}",
+        "meaning": "Energy needed to warm all the ice to its melting point",
+        "unit": "J"
+      },
+      {
+        "symbol": "c_{\\mathrm{ice}},c_w",
+        "meaning": "Specific heat capacities of ice and liquid water",
         "unit": "J/(kg K)"
       },
       {
-        "symbol": "T_i",
-        "meaning": "Initial temperature below zero Celsius",
-        "unit": "°C"
+        "symbol": "T_i,T_m,T_f",
+        "meaning": "Initial, melting and final temperatures; Tm = 0 °C at ordinary pressure",
+        "unit": "°C (differences also in K)"
+      },
+      {
+        "symbol": "Q_{\\mathrm{rem}}",
+        "meaning": "Heat remaining after warming to the melting point",
+        "unit": "J"
       },
       {
         "symbol": "L_f",
         "meaning": "Specific latent heat of fusion",
         "unit": "J/kg"
+      },
+      {
+        "symbol": "m_{\\mathrm{melt}}",
+        "meaning": "Mass actually melted, between zero and M",
+        "unit": "kg"
       }
     ],
-    "when": "Assumes all lost kinetic energy heats only the portion that melts, from Ti to zero, with no other heat losses. It does not describe uniform warming of the entire block.",
+    "when": "Assume ice initially at or below its ordinary melting point, uniform thermal equilibration, approximately constant heat capacities, no mass loss and no other mechanical-energy changes. Set eta = 1 only if all lost kinetic energy heats this block; otherwise account for heat entering the surface or surroundings. Local surface melting while the bulk remains cold requires a different heat-distribution model and cannot be inferred from total kinetic-energy loss alone.",
     "example": {
-      "prompt": "A $2.00\\,\\mathrm{kg}$ ice block slows from $10.0$ to $0\\,\\mathrm{m/s}$. Melted ice initially is at $-10.0^\\circ\\mathrm C$. Use $c_i=2100$, $L_f=334000$ in SI.",
+      "prompt": "A $2.00\\,\\mathrm{kg}$ ice block initially at $-10.0^\\circ\\mathrm C$ slows from $10.0$ to $0\\,\\mathrm{m/s}$. Assume all lost kinetic energy remains in the block and it reaches a uniform temperature. Use $c_{\\mathrm{ice}}=2100\\,\\mathrm{J/(kg\\,K)}$. Does any ice melt?",
       "steps": [
-        "$E_{lost}=\\tfrac12(2)(10^2)=100\\,\\mathrm J$.",
-        "Energy per kg is $2100(10)+334000=355000\\,\\mathrm{J/kg}$.",
-        "$m_{melt}=100/355000=2.82\\times10^{-4}\\,\\mathrm{kg}=0.282\\,\\mathrm g$."
+        "Stage 1: $Q_{\\mathrm{avail}}=\\tfrac12(2.00)(10.0^2-0^2)=100\\,\\mathrm J$.",
+        "Stage 2: warming the whole block to zero needs $Q_{\\mathrm{warm}}=2.00(2100)(10.0)=42000\\,\\mathrm J$.",
+        "Since $100<42000$, stop before the melting stage: $m_{\\mathrm{melt}}=0$.",
+        "The final temperature is $T_f=-10.0+100/(2.00\\cdot2100)=-9.98^\\circ\\mathrm C$ (two decimal places)."
       ],
-      "check": "The melted mass is tiny compared with the block; ice requires a large latent energy."
-    }
+      "check": "There is far too little energy to bring the entire block to its melting point. The previous 0.282 g result assumed selective heating of just a small portion; it is not the result for uniform warming of the whole block."
+    },
+    "stages": [
+      {
+        "title": "1 · Find the heat available to the ice",
+        "formula": "Q_{\\mathrm{avail}}=\\eta\\,\\tfrac12 M(v_i^2-v_f^2)",
+        "explanation": "For a slowing block, lost kinetic energy is positive. This relation assumes the loss is dissipated by friction; only the retained fraction heats the ice. Other work or potential-energy changes require a fuller energy balance."
+      },
+      {
+        "title": "2 · Warm the whole block; test the threshold",
+        "formula": "Q_{\\mathrm{warm}}=Mc_{\\mathrm{ice}}(T_m-T_i)",
+        "explanation": "If $Q_{\\mathrm{avail}}<Q_{\\mathrm{warm}}$, stop: no ice melts and $T_f=T_i+Q_{\\mathrm{avail}}/(Mc_{\\mathrm{ice}})$. At equality the block just reaches $T_m$ with zero melted mass. Do not spend the same heat again on melting."
+      },
+      {
+        "title": "3 · Melt using only the remaining heat",
+        "formula": "Q_{\\mathrm{rem}}=Q_{\\mathrm{avail}}-Q_{\\mathrm{warm}},\\qquad m_{\\mathrm{melt}}=\\frac{Q_{\\mathrm{rem}}}{L_f}",
+        "explanation": "Use this stage only after the warming threshold is reached. For $0\\leq Q_{\\mathrm{rem}}\\leq ML_f$, the melted mass is between zero and M and the temperature remains $T_m$. If the energy exceeds $ML_f$, all the ice melts; never report a melted mass greater than M."
+      },
+      {
+        "title": "4 · Warm liquid only after all ice melts",
+        "formula": "T_f=T_m+\\frac{Q_{\\mathrm{rem}}-ML_f}{Mc_w}",
+        "explanation": "Use only if $Q_{\\mathrm{rem}}>ML_f$. After complete melting, surplus energy warms the liquid. This expression applies only below the boiling point at the given pressure; reaching boiling would require further warming/vaporization stages."
+      }
+    ],
+    "additionalExamples": [
+      {
+        "prompt": "A $0.100\\,\\mathrm{kg}$ ice block at $-10.0^\\circ\\mathrm C$ slows from $300$ to $0\\,\\mathrm{m/s}$ in an idealized model with no mass loss. All lost kinetic energy heats the block uniformly. Use $c_{\\mathrm{ice}}=2100\\,\\mathrm{J/(kg\\,K)}$ and $L_f=334000\\,\\mathrm{J/kg}$. Find the final phase masses.",
+        "steps": [
+          "Stage 1: $Q_{\\mathrm{avail}}=\\tfrac12(0.100)(300^2)=4500\\,\\mathrm J$.",
+          "Stage 2: $Q_{\\mathrm{warm}}=0.100(2100)(10.0)=2100\\,\\mathrm J$. This threshold is reached.",
+          "Stage 3: $Q_{\\mathrm{rem}}=4500-2100=2400\\,\\mathrm J$. Complete melting would need $ML_f=33400\\,\\mathrm J$, so melting is partial.",
+          "$m_{\\mathrm{melt}}=2400/334000=0.00719\\,\\mathrm{kg}$; remaining ice mass is $0.100-0.0071856=0.0928\\,\\mathrm{kg}$.",
+          "Stage 4 is not reached. Ice and water coexist at $0^\\circ\\mathrm C$."
+        ],
+        "check": "The 2100 J spent warming is not available a second time for melting. The phase masses sum to the original mass; the large speed is an illustrative idealization, not a claim about a real intact sliding ice block."
+      }
+    ]
   },
   "Momentum and impulse": {
     "meaning": "Momentum tracks mass times signed velocity. Impulse is the area under a force-time curve and changes momentum.",
