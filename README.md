@@ -14,7 +14,7 @@ npm run preview
 
 Deploy on Vercel using the Vite preset, build `npm run build`, output `dist`. Hash routing needs no rewrites. No backend or environment variables required.
 
-Includes nine topic guides, a printable formula sheet, 36 flashcards, 18 original self-graded questions, missed-question retries, an exam checklist and a two-day plan. Progress is device-local, with JSON export/import and storage-failure warnings. Scratch working is not saved.
+Includes nine topic guides, a printable formula sheet, 36 flashcards, 108 original self-graded questions, missed-question retries, an exam checklist and a two-day plan. Progress is device-local, with JSON export/import and storage-failure warnings. Scratch working is not saved.
 
 Original numerical data and figures missing from the supplied summary are not guessed. New practice problems are labeled as original, not official exam questions. See [docs/WORKLOG.md](docs/WORKLOG.md) for provenance, limitations and file map.
 
@@ -41,3 +41,20 @@ No database migrations were run against the shared project: the live schema and 
 The application checks for an existing row and inserts only if missing; database code `23505` is treated as an idempotent race. In-flight and completed writes are deduped per user. Only valid question IDs are accepted. Unique server keys are essential to avoid duplicate points across tabs/devices. Grades are not uploaded and re-attempting does not create another point.
 
 This is **cross-site attempts recording**, matching the provided Chemistry worklog, not two-way cloud backup of all study progress. Reading marks, card marks, grades and checklists remain local; keep using JSON export/import for those.
+
+
+## Detailed notes & expanded practice
+
+All 38 formula groups now explain the physical meaning, every symbol and its units, validity conditions, a newly authored worked numerical example, and a final sense/unit/sign check. These examples are **new instructional examples**, not reconstructions of missing lecture values. The printable formula sheet includes the same symbol tables and assumptions; full example steps are in the linked topic notes. Each topic also adds deeper concept explanations.
+
+Practice contains 12 questions per topic (108 total), with six selectable styles: concept, calculation, comparison, explain the error, graph interpretation (text-described graphs), and multi-stage problems. The original 18 IDs and solutions are preserved; new IDs append q3–q12 in each topic. Existing grades and Supabase attempts stay attached to their stable IDs. Counts in the UI derive from the bank, not hardcoded totals. All questions remain self-graded.
+
+### Browser smoke test
+
+```sh
+npx playwright install chromium
+npm run dev  # separate terminal
+npm run test:browser
+```
+
+The smoke test uses a fresh browser context and verifies formula/example rendering, question counts and type filtering, legacy grade compatibility, new grading and missed retries, print PDF rendering, and 390px mobile overflow. `BASE_URL` (with trailing slash) and `CHROMIUM_PATH` can select another server/browser. Temporary screenshots and the formula-sheet PDF go to `/tmp/`, not Git. Live Supabase authentication is not exercised by this test.

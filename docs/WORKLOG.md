@@ -83,3 +83,35 @@ On sign-in and session restore, known local question IDs backfill to `attempts` 
 No access to live Supabase schema or public key was available. Database policies, unique keys and allowance for `phys1101` must be verified in the existing shared project. Required Vercel variables and Supabase redirect URLs are documented in README and `.env.example`. No live database changes were attempted.
 
 Six mocked sync tests cover concurrent dedupe, existing rows, unique-key races, failed-write retries, user isolation, unknown imported IDs and failed reads. These supplement the content/math/backup audit; they do not claim an end-to-end live login or database test.
+
+## 11. Detailed formula guides and diversified practice (18 → 108)
+
+Request: make study notes more detailed, especially variable definitions, formula meaning and examples; substantially expand and diversify the question bank.
+
+### Notes and formula sheet
+
+All **38 formula groups** now have a physical interpretation, a symbol/meaning/unit table, explicit selection and validity guidance, an original numerical worked example with at least two steps, and a concluding sign/unit/limiting-case check. The nine topics gain **27 deeper concept explanations** covering graph slopes/areas, signs versus slowing, incline forces, system boundaries, energy bookkeeping, radial axes, calorimetry thresholds, absolute pressure, molecular statistics, heating curves and electric-field interpretation. Equation jump buttons make long notes easier to navigate. Notes search includes the new formula details.
+
+The formula sheet shares the symbol tables and assumptions, with links to the full examples in notes. Example calculations are new instructional content and are labeled **Original worked example**; original course examples with missing data remain symbolic and explicitly limited. No missing official values or figures are guessed.
+
+### Question expansion
+
+Each of the nine topics receives ten new questions: **12 per topic, 108 total** (90 new). The six question styles are calculation, concept, comparison, explain the error, text-described graph interpretation and multi-stage problems. Practice provides style-based sessions in addition to topic/all/missed sessions; the current question shows its style. All prompts remain self-graded with worked explanations. Counts are derived from data throughout the dashboard and practice UI.
+
+Existing q1/q2 IDs and content are preserved. New IDs are q3–q12 in each topic, so local grades and shared attempts keep their meaning. Expanded IDs are automatically accepted by the existing Supabase recording/backfill logic. No auth or database schema changes are required for this expansion. Scratch text is reset on question change, and keyboard shortcuts ignore the scratch textarea.
+
+### Files
+
+- `src/content/formulaDetails.ts`: typed explanations, symbol tables and 38 worked examples keyed by the existing formula labels.
+- `src/content/concepts.ts`: the 27 additional conceptual explanations.
+- `src/content/expandedQuestions.ts`: 90 new typed original questions and solutions.
+- `src/content/course.ts`: aggregates content without changing existing stable IDs.
+- `src/main.tsx` / `src/styles.css`: formula guides, responsive symbol tables, equation jumps, question-style sessions and dynamic counts.
+- `scripts/audit.ts`: checks every formula has definitions, units and worked examples; validates 108 unique IDs, 12 per topic, six styles and strict KaTeX parsing of **956 math expressions**.
+- `scripts/browser-smoke.mjs`: reproducible Playwright smoke test (see README).
+
+### Verification
+
+`npm test` passes the expanded content/backup audit and seven mocked attempts-sync tests, including newly appended question IDs. `npm run build` passes TypeScript and production bundling. A real headless Chromium smoke run passes: all 38 worked examples and symbol tables render; all 108 questions and nine topic counts appear; style filtering works; a seeded legacy grade survives; new grading and missed-question retry work; scratch typing does not invoke navigation shortcuts; the formula sheet renders to a print PDF; notes and practice have no page-level horizontal overflow at 390px. Desktop, formula-example and mobile screenshots were inspected. No live Supabase sign-in or production deployment is claimed by these tests.
+
+The default browser downloader remains restricted in this environment. For this session, Chromium was obtained via an npm-distributed binary and run with its matching shared libraries; browser binaries, temporary PDFs and screenshots are not committed.
